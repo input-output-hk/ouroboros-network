@@ -1,0 +1,29 @@
+# General reviewers per PR
+#                       Duncan   Marcin Karl    Nick     Paweł
+*                       @dcoutts @coot  @karknu @nfrisby @EncodePanda
+
+
+docs                               @dcoutts @coot @karknu @njd42 @peterwthomson
+
+io-sim                             @dcoutts @coot
+io-sim-classes                     @dcoutts @coot
+
+network-mux                        @dcoutts @coot @karknu
+ntp-client                         @coot
+typed-protocols                    @dcoutts @coot
+typed-protocols-examples           @dcoutts @coot
+Win32-network                      @dcoutts @coot
+
+ouroboros-network-framework        @dcoutts @coot @karknu
+ouroboros-network                  @dcoutts @coot @karknu
+ouroboros-network/wireshark-plugin @karknu
+
+cardano-client                     @coot
+
+bors.toml                          @devops
+nix                                @devops
+*.nix                              @devops
+
+scripts/haddocs.hs                 @coot
+scripts/install.ps1                @coot
+scripts/test.sh                    @coot
