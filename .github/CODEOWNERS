@@ -24,7 +24,7 @@ ouroboros-network-testing          @dcoutts @coot @karknu
 
 cardano-client                     @coot
 
-scripts/haddocs.hs                 @coot
+scripts/haddocs.sh                 @coot
 scripts/install.ps1                @coot
 scripts/test.sh                    @coot
 
