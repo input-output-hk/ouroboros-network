@@ -1,7 +1,10 @@
-# General reviewers per PR
-#                       Duncan   Marcin Karl    Nick     Paweł
-*                       @dcoutts @coot  @karknu @nfrisby @EncodePanda
+# Note: later rules override earlier rules.
 
+# Default
+#                                  Duncan   Marcin Karl    Nick     Paweł        "Higher ups"
+*                                  @dcoutts @coot  @karknu @nfrisby @EncodePanda @input-output-hk/consensus-superowners
+
+# Network Team
 
 docs                               @dcoutts @coot @karknu @njd42 @peterwthomson
 
@@ -17,13 +20,40 @@ Win32-network                      @dcoutts @coot
 ouroboros-network-framework        @dcoutts @coot @karknu
 ouroboros-network                  @dcoutts @coot @karknu
 ouroboros-network/wireshark-plugin @karknu
+ouroboros-network-testing          @dcoutts @coot @karknu
 
 cardano-client                     @coot
-
-bors.toml                          @devops
-nix                                @devops
-*.nix                              @devops
 
 scripts/haddocs.hs                 @coot
 scripts/install.ps1                @coot
 scripts/test.sh                    @coot
+
+# Consensus Team
+
+ouroboros-consensus/               @nfrisby @input-output-hk/consensus-superowners
+ouroboros-consensus-test/          @nfrisby @input-output-hk/consensus-superowners
+ouroboros-consensus-mock/          @nfrisby @input-output-hk/consensus-superowners
+ouroboros-consensus-mock-test/     @nfrisby @input-output-hk/consensus-superowners
+ouroboros-consensus-byron/         @nfrisby @input-output-hk/consensus-superowners
+ouroboros-consensus-byronspec/     @nfrisby @input-output-hk/consensus-superowners
+ouroboros-consensus-byron-test/    @nfrisby @input-output-hk/consensus-superowners
+ouroboros-consensus-shelley/       @nfrisby @input-output-hk/consensus-superowners
+ouroboros-consensus-shelley-test/  @nfrisby @input-output-hk/consensus-superowners
+ouroboros-consensus-cardano/       @nfrisby @input-output-hk/consensus-superowners
+ouroboros-consensus-cardano-test/  @nfrisby @input-output-hk/consensus-superowners
+
+scripts/buildkite/check-stylish.sh @nfrisby @input-output-hk/consensus-superowners
+
+# CICD
+
+bors.toml                          @input-output-hk/devops @input-output-hk/consensus-superowners
+nix/                               @input-output-hk/devops @input-output-hk/consensus-superowners
+*.nix                              @input-output-hk/devops @input-output-hk/consensus-superowners
+cabal.project.local.ci.windows     @input-output-hk/devops @input-output-hk/consensus-superowners
+.github/workflows/                 @input-output-hk/devops @input-output-hk/consensus-superowners
+
+cabal.project.local.github-pages   @coot @input-output-hk/devops @input-output-hk/consensus-superowners
+.github/workflows/github-page.yml  @coot @input-output-hk/devops @input-output-hk/consensus-superowners
+
+.buildkite/slow-ThreadNet-tests.sh @nfrisby @input-output-hk/consensus-superowners
+.buildkite/validate-mainnet.sh     @nfrisby @input-output-hk/consensus-superowners
