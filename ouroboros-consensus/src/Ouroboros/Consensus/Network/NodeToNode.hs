@@ -469,6 +469,7 @@ mkApps kernel Tracers {..} Codecs {..} genChainSyncTimeout Handlers {..} =
             (getNodeCandidates kernel)
             them $ \varCandidate -> do
               chainSyncTimeout <- genChainSyncTimeout
+              reqRspTr <- peerReqRspTracer (Node.chainSyncReqRspTracer (getTracers kernel)) them
               (_, trailing) <-
                 runPipelinedPeerWithLimits
                   (contramap (TraceLabelPeer them) tChainSyncTracer)
@@ -476,7 +477,7 @@ mkApps kernel Tracers {..} Codecs {..} genChainSyncTimeout Handlers {..} =
                   (byteLimitsChainSync (const 0)) -- TODO: Real Bytelimits, see #1727
                   (timeLimitsChainSync chainSyncTimeout)
                   channel
-                  $ chainSyncClientPeerPipelined
+                  $ chainSyncClientPeerPipelined reqRspTr
                   $ hChainSyncClient version controlMessageSTM varCandidate
               return ((), trailing)
 
