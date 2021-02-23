@@ -73,6 +73,9 @@ module Ouroboros.Consensus.Util (
 
 import           Cardano.Crypto.Hash (Hash, HashAlgorithm, hashFromBytes,
                      hashFromBytesShort)
+import           Cardano.Prelude (SchemaError)
+import           Codec.Serialise (Serialise (..))
+import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as Strict
 import qualified Data.ByteString.Lazy as Lazy
 import           Data.ByteString.Short (ShortByteString)
@@ -88,12 +91,9 @@ import qualified Data.Set as Set
 import           Data.Void
 import           Data.Word (Word64)
 import           GHC.Stack
+import qualified "canonical-json" Text.JSON.Canonical as CJSON
 
 import           Ouroboros.Network.Util.ShowProxy (ShowProxy (..))
-import Codec.Serialise (Serialise(..))
-import qualified "canonical-json" Text.JSON.Canonical as CJSON
-import qualified Data.Aeson as Aeson
-import Cardano.Prelude (SchemaError)
 
 {-------------------------------------------------------------------------------
   Type-level utility
@@ -400,11 +400,11 @@ eitherToMaybe (Right x) = Just x
 -- encoding (using the aeson package).
 newtype SerialiseViaAesonJSON a = SerialiseViaAesonJSON a
 
-instance
-  ( Aeson.ToJSON a
-  , Aeson.FromJSON a
-  ) =>  Serialise (SerialiseViaAesonJSON a) where
+instance ( Aeson.ToJSON a
+         , Aeson.FromJSON a
+         ) =>  Serialise (SerialiseViaAesonJSON a) where
   encode (SerialiseViaAesonJSON a) = encode $ Aeson.encode a
+
   decode = do
     bs :: Lazy.ByteString <- decode
     return
@@ -412,15 +412,13 @@ instance
       $ maybe (error "SerialiseViaAesonJSON: Failed to decode") id
       $ Aeson.decode bs
 
-
 -- | DerivingVia newtype wrapper to derive @Serialise@ instances via JSON
 -- encoding (using the canonical-json package).
 newtype SerialiseViaCanonicalJSON a = SerialiseViaCanonicalJSON a
 
-instance
-  ( CJSON.ToJSON Identity a
-  , CJSON.FromJSON (Either SchemaError) a
-  ) =>  Serialise (SerialiseViaCanonicalJSON a) where
+instance ( CJSON.ToJSON Identity a
+         , CJSON.FromJSON (Either SchemaError) a
+         ) =>  Serialise (SerialiseViaCanonicalJSON a) where
   encode (SerialiseViaCanonicalJSON a) = runIdentity $ do
     json <- CJSON.toJSON a
     return . encode $ CJSON.renderCanonicalJSON json
@@ -431,4 +429,3 @@ instance
       $ SerialiseViaCanonicalJSON
       $ either error (either (error . show) id  . CJSON.fromJSON @(Either SchemaError) @a)
       $ CJSON.parseCanonicalJSON bs
-

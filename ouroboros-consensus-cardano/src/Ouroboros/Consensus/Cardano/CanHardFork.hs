@@ -1,21 +1,26 @@
-{-# LANGUAGE ConstraintKinds          #-}
-{-# LANGUAGE DataKinds                #-}
-{-# LANGUAGE DeriveAnyClass           #-}
-{-# LANGUAGE DeriveGeneric            #-}
-{-# LANGUAGE DisambiguateRecordFields #-}
-{-# LANGUAGE FlexibleContexts         #-}
-{-# LANGUAGE FlexibleInstances        #-}
-{-# LANGUAGE LambdaCase               #-}
-{-# LANGUAGE MultiParamTypeClasses    #-}
-{-# LANGUAGE NamedFieldPuns           #-}
-{-# LANGUAGE OverloadedStrings        #-}
-{-# LANGUAGE RecordWildCards          #-}
-{-# LANGUAGE ScopedTypeVariables      #-}
-{-# LANGUAGE TupleSections            #-}
-{-# LANGUAGE TypeApplications         #-}
-{-# LANGUAGE TypeFamilies             #-}
-{-# LANGUAGE TypeOperators            #-}
-{-# LANGUAGE UndecidableInstances     #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE DeriveAnyClass             #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DerivingStrategies         #-}
+{-# LANGUAGE DerivingVia                #-}
+{-# LANGUAGE DisambiguateRecordFields   #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NamedFieldPuns             #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE PackageImports             #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TupleSections              #-}
+{-# LANGUAGE TypeApplications           #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE UndecidableInstances       #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 module Ouroboros.Consensus.Cardano.CanHardFork (
     TriggerHardFork (..)
@@ -26,12 +31,14 @@ module Ouroboros.Consensus.Cardano.CanHardFork (
   , translateChainDepStateAcrossShelley
   ) where
 
+
+import           Codec.Serialise (Serialise (..))
 import           Control.Monad
 import           Control.Monad.Except (Except, runExcept, throwError)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (listToMaybe, mapMaybe)
 import           Data.Proxy
-import           Data.SOP.Strict ((:.:) (..), NP (..), unComp)
+import           Data.SOP.Strict (NP (..), unComp, (:.:) (..))
 import           Data.Void (Void)
 import           Data.Word
 import           GHC.Generics (Generic)
@@ -47,7 +54,7 @@ import qualified Cardano.Chain.Update as CC.Update
 import           Ouroboros.Consensus.Block
 import           Ouroboros.Consensus.Forecast
 import           Ouroboros.Consensus.HardFork.History (Bound (boundSlot),
-                     addSlots)
+                     addSlots, dummyEpochInfo)
 import           Ouroboros.Consensus.Ledger.Abstract
 import           Ouroboros.Consensus.TypeFamilyWrappers
 import           Ouroboros.Consensus.Util (eitherToMaybe)
@@ -73,11 +80,13 @@ import           Ouroboros.Consensus.Shelley.Protocol
 
 import           Cardano.Ledger.Allegra.Translation ()
 import           Cardano.Ledger.Crypto (ADDRHASH, DSIGN, HASH)
+import           Cardano.Ledger.Era (Era)
 import qualified Cardano.Ledger.Era as SL
 import           Cardano.Ledger.Mary.Translation ()
 import qualified Shelley.Spec.Ledger.API as SL
 
 import           Ouroboros.Consensus.Cardano.Block
+import           Ouroboros.Consensus.Cardano.Orphans ()
 
 {-------------------------------------------------------------------------------
   Figure out the transition point for Byron
@@ -275,7 +284,7 @@ data TriggerHardFork =
   | TriggerHardForkAtEpoch !EpochNo
     -- | Never trigger a hard fork
   | TriggerHardForkNever
-  deriving (Show, Generic, NoThunks)
+  deriving (Show, Generic, NoThunks, Serialise)
 
 -- | When Byron is part of the hard-fork combinator, we use the partial ledger
 -- config. Standalone Byron uses the regular ledger config. This means that
@@ -286,7 +295,8 @@ data ByronPartialLedgerConfig = ByronPartialLedgerConfig {
       byronLedgerConfig    :: !(LedgerConfig ByronBlock)
     , byronTriggerHardFork :: !TriggerHardFork
     }
-  deriving (Generic, NoThunks)
+  deriving stock Generic
+  deriving anyclass (NoThunks, Serialise)
 
 instance HasPartialLedgerConfig ByronBlock where
 
@@ -330,6 +340,70 @@ data ShelleyPartialLedgerConfig era = ShelleyPartialLedgerConfig {
     , shelleyTriggerHardFork :: !TriggerHardFork
     }
   deriving (Generic, NoThunks)
+
+instance Era era => Serialise (ShelleyPartialLedgerConfig era) where
+  decode =
+    ShelleyPartialLedgerConfig
+      <$> (ShelleyLedgerConfig
+        <$> decode
+        <*> (SL.Globals
+              -- Globals
+              --
+              -- Note: we can't serialise EpochInfo as it contains
+              -- lambdas, but that's ok because it's value is known
+              -- staticaly. It is always just `dummyEpochInfo` when inside
+              -- a ShelleyPartialLedgerConfi
+              dummyEpochInfo
+              <$> decode
+              <*> decode
+              <*> decode
+              <*> decode
+              <*> decode
+              <*> decode
+              <*> decode
+              <*> decode
+              <*> decode
+              <*> decode
+            )
+      )
+      <*> decode
+  encode
+    (ShelleyPartialLedgerConfig
+      (ShelleyLedgerConfig
+        myCompactGenesis
+        (SL.Globals
+          _epochInfo
+          slotsPerKESPeriod
+          stabilityWindow
+          randomnessStabilisationWindow
+          securityParameter
+          maxKESEvo
+          quorum
+          maxMajorPV
+          maxLovelaceSupply
+          activeSlotCoeff
+          networkId
+        )
+      )
+      triggerHardFork
+    )
+      -- CompactGenesis
+      = encode myCompactGenesis
+        -- Globals
+        --
+        -- Note: we don't serialise EpochInfo. See comment in `decode` above.
+        <> encode slotsPerKESPeriod
+        <> encode stabilityWindow
+        <> encode randomnessStabilisationWindow
+        <> encode securityParameter
+        <> encode maxKESEvo
+        <> encode quorum
+        <> encode maxMajorPV
+        <> encode maxLovelaceSupply
+        <> encode activeSlotCoeff
+        <> encode networkId
+        -- TriggerHardFork
+        <> encode triggerHardFork
 
 instance ShelleyBasedEra era => HasPartialLedgerConfig (ShelleyBlock era) where
   type PartialLedgerConfig (ShelleyBlock era) = ShelleyPartialLedgerConfig era
