@@ -23,15 +23,15 @@ import qualified Cardano.Chain.UTxO
 import qualified Cardano.Crypto.Hashing
 import qualified Cardano.Crypto.ProtocolMagic
 import           Codec.Serialise (Serialise)
--- import qualified Ouroboros.Consensus.Shelley.Protocol
+import qualified Ouroboros.Consensus.Shelley.Protocol
 import           Ouroboros.Consensus.Util
--- import           Shelley.Spec.Ledger.API
+import           Shelley.Spec.Ledger.API
 import qualified Shelley.Spec.Ledger.API as SL
 import           Shelley.Spec.Ledger.BaseTypes (ActiveSlotCoeff, UnitInterval)
 
--- deriving anyclass instance Serialise Ouroboros.Consensus.Shelley.Protocol.TPraosParams
--- deriving newtype instance Serialise Ouroboros.Consensus.Shelley.Protocol.MaxMajorProtVer
--- deriving anyclass instance Serialise Nonce
+deriving anyclass instance Serialise Ouroboros.Consensus.Shelley.Protocol.TPraosParams
+deriving newtype instance Serialise Ouroboros.Consensus.Shelley.Protocol.MaxMajorProtVer
+deriving anyclass instance Serialise Nonce
 deriving anyclass instance Serialise ActiveSlotCoeff
 deriving anyclass instance Serialise SL.Network
 deriving anyclass instance Serialise Shelley.Spec.Ledger.BaseTypes.UnitInterval

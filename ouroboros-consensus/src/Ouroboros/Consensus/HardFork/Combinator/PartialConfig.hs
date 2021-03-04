@@ -81,7 +81,8 @@ class ( UpdateLedger blk
 newtype WrapPartialLedgerConfig    blk = WrapPartialLedgerConfig    { unwrapPartialLedgerConfig    :: PartialLedgerConfig                   blk  }
 newtype WrapPartialConsensusConfig blk = WrapPartialConsensusConfig { unwrapPartialConsensusConfig :: PartialConsensusConfig (BlockProtocol blk) }
 
-deriving newtype instance Serialise (PartialLedgerConfig blk)  => Serialise (WrapPartialLedgerConfig    blk)
+deriving newtype instance Serialise (PartialLedgerConfig                   blk)  => Serialise (WrapPartialLedgerConfig    blk)
+deriving newtype instance Serialise (PartialConsensusConfig (BlockProtocol blk)) => Serialise (WrapPartialConsensusConfig blk)
 
 deriving instance NoThunks (PartialLedgerConfig                   blk)  => NoThunks (WrapPartialLedgerConfig    blk)
 deriving instance NoThunks (PartialConsensusConfig (BlockProtocol blk)) => NoThunks (WrapPartialConsensusConfig blk)

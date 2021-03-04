@@ -312,6 +312,7 @@ data QueryHardFork xs result where
   GetInterpreter  :: QueryHardFork xs (History.Interpreter xs)
   GetCurrentEra   :: QueryHardFork xs (EraIndex xs)
   GetLedgerCfg    :: QueryHardFork xs (HardForkLedgerConfig xs)
+  GetConsensusCfg :: QueryHardFork xs (ConsensusConfig (HardForkProtocol xs))
 
 deriving instance Show (QueryHardFork xs result)
 
@@ -320,6 +321,7 @@ instance All SingleEraBlock xs => ShowQuery (QueryHardFork xs) where
     GetInterpreter  -> show
     GetCurrentEra   -> show
     GetLedgerCfg    -> const "TODO show `HardForkLedgerConfig xs`"
+    GetConsensusCfg -> const "TODO show `ConsensusConfig (HardForkProtocol xs)`"
 
 instance SameDepIndex (QueryHardFork xs) where
   sameDepIndex GetInterpreter GetInterpreter =
@@ -333,6 +335,10 @@ instance SameDepIndex (QueryHardFork xs) where
   sameDepIndex GetLedgerCfg GetLedgerCfg =
       Just Refl
   sameDepIndex GetLedgerCfg _ =
+      Nothing
+  sameDepIndex GetConsensusCfg GetConsensusCfg =
+      Just Refl
+  sameDepIndex GetConsensusCfg _ =
       Nothing
 
 interpretQueryHardFork ::
@@ -348,6 +354,7 @@ interpretQueryHardFork cfg query st =
       GetCurrentEra  ->
         eraIndexFromNS $ State.tip $ hardForkLedgerStatePerEra st
       GetLedgerCfg -> configLedger cfg
+      GetConsensusCfg -> configConsensus cfg
 
 {-------------------------------------------------------------------------------
   Serialisation
@@ -373,8 +380,8 @@ decodeQueryAnytimeResult :: QueryAnytime result -> forall s. Decoder s result
 decodeQueryAnytimeResult GetEraStart = decode
 
 encodeQueryHardForkResult ::
-     ( Serialise (LedgerConfig (HardForkBlock xs))
-    --  , Serialise (ConsensusConfig (HardForkProtocol xs))
+     ( Serialise (ConsensusConfig (HardForkProtocol xs))
+     , Serialise (LedgerConfig (HardForkBlock xs))
      , SListI xs
      )
   => QueryHardFork xs result -> result -> Encoding
@@ -382,10 +389,11 @@ encodeQueryHardForkResult = \case
     GetInterpreter  -> encode
     GetCurrentEra   -> encode
     GetLedgerCfg    -> encode
+    GetConsensusCfg -> encode
 
 decodeQueryHardForkResult ::
-     ( Serialise (LedgerConfig (HardForkBlock xs))
-    --  , Serialise (ConsensusConfig (HardForkProtocol xs))
+     ( Serialise (ConsensusConfig (HardForkProtocol xs))
+     , Serialise (LedgerConfig (HardForkBlock xs))
      , SListI xs
      )
   => QueryHardFork xs result -> forall s. Decoder s result
@@ -393,6 +401,7 @@ decodeQueryHardForkResult = \case
     GetInterpreter  -> decode
     GetCurrentEra   -> decode
     GetLedgerCfg    -> decode
+    GetConsensusCfg -> decode
 
 {-------------------------------------------------------------------------------
   Auxiliary

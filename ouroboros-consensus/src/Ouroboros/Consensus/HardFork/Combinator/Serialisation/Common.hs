@@ -264,7 +264,7 @@ pSHFC = Proxy
 class ( CanHardFork xs
       , All SerialiseConstraintsHFC xs
       , Serialise (HardForkLedgerConfig xs)
-      -- , Serialise (ConsensusConfig (HardForkProtocol xs))
+      , Serialise (ConsensusConfig (HardForkProtocol xs))
         -- Required for HasNetworkProtocolVersion
       , All (Compose Show EraNodeToNodeVersion)   xs
       , All (Compose Eq   EraNodeToNodeVersion)   xs

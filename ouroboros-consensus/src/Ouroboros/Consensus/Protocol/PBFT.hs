@@ -203,6 +203,7 @@ newtype instance Ticked (PBftLedgerView c) = TickedPBftLedgerView {
     }
 
 deriving anyclass instance PBftCrypto c => NoThunks (PBftLedgerView c)
+  -- use generic instance
 
 deriving instance Eq (PBftVerKeyHash c) => Eq (PBftLedgerView c)
 deriving instance Show (PBftVerKeyHash c) => Show (PBftLedgerView c)
@@ -229,7 +230,7 @@ newtype PBftSignatureThreshold = PBftSignatureThreshold {
     }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (NoThunks)
-  -- deriving newtype (Serialise)
+  deriving newtype (Serialise)
 
 -- | Protocol parameters
 data PBftParams = PBftParams {
@@ -252,8 +253,7 @@ data PBftParams = PBftParams {
     , pbftSignatureThreshold :: !PBftSignatureThreshold
     }
   deriving stock (Generic, Show)
-  deriving anyclass (NoThunks)
-  -- deriving anyclass (NoThunks, Serialise)
+  deriving anyclass (NoThunks, Serialise)
 
 -- | If we are a core node (i.e. a block producing node) we know which core
 -- node we are, and we have the operational key pair and delegation certificate.
@@ -281,8 +281,7 @@ newtype instance ConsensusConfig (PBft c) = PBftConfig {
       pbftParams :: PBftParams
     }
   deriving stock (Generic)
-  deriving anyclass (NoThunks)
-  -- deriving anyclass (NoThunks, Serialise)
+  deriving anyclass (NoThunks, Serialise)
 
 -- Ticking has no effect on the PBFtState, but we do need the ticked ledger view
 data instance Ticked (PBftState c) = TickedPBftState {

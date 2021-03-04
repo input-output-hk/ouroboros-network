@@ -193,6 +193,10 @@ encodeQueryHardFork vHfc = \case
         Enc.encodeListLen 1
       , Enc.encodeWord8 2
       ]
+    Some GetConsensusCfg -> mconcat [
+        Enc.encodeListLen 1
+      , Enc.encodeWord8 3
+      ]
 
 decodeQueryHardFork :: Decoder s (Some (QueryHardFork xs))
 decodeQueryHardFork = do
@@ -202,6 +206,7 @@ decodeQueryHardFork = do
       0 -> return $ Some GetInterpreter
       1 -> return $ Some GetCurrentEra
       2 -> return $ Some GetLedgerCfg
+      3 -> return $ Some GetConsensusCfg
       _ -> fail $ "QueryHardFork: invalid tag " ++ show tag
 
 instance SerialiseHFC xs

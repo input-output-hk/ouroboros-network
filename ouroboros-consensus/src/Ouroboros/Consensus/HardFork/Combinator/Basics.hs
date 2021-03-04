@@ -55,12 +55,12 @@ import           Ouroboros.Consensus.TypeFamilyWrappers
 import           Ouroboros.Consensus.Util (ShowProxy)
 import           Ouroboros.Consensus.Util.SOP (fn_5)
 
-import           Codec.Serialise (Serialise (..))
 import           Ouroboros.Consensus.HardFork.Combinator.Abstract
 import           Ouroboros.Consensus.HardFork.Combinator.AcrossEras
 import           Ouroboros.Consensus.HardFork.Combinator.PartialConfig
 import           Ouroboros.Consensus.HardFork.Combinator.State.Instances ()
 import           Ouroboros.Consensus.HardFork.Combinator.State.Types
+import Codec.Serialise (Serialise(..))
 
 {-------------------------------------------------------------------------------
   Hard fork protocol, block, and ledger state
@@ -106,6 +106,11 @@ data instance ConsensusConfig (HardForkProtocol xs) = HardForkConsensusConfig {
     }
   deriving stock    (Generic)
   deriving anyclass (NoThunks)
+
+deriving instance
+  ( SListI xs
+  , Serialise (PerEraConsensusConfig xs)
+  ) => Serialise (ConsensusConfig (HardForkProtocol xs))
 
 {-------------------------------------------------------------------------------
   Block config
