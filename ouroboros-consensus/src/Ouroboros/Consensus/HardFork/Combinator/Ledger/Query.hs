@@ -309,17 +309,19 @@ answerQueryAnytime HardForkLedgerConfig{..} =
 -------------------------------------------------------------------------------}
 
 data QueryHardFork xs result where
-  GetInterpreter  :: QueryHardFork xs (History.Interpreter xs)
-  GetCurrentEra   :: QueryHardFork xs (EraIndex xs)
-  GetLedgerCfg    :: QueryHardFork xs (HardForkLedgerConfig xs)
+  GetInterpreter   :: QueryHardFork xs (History.Interpreter xs)
+  GetCurrentEra    :: QueryHardFork xs (EraIndex xs)
+  GetLedgerCfg     :: QueryHardFork xs (HardForkLedgerConfig xs)
+  GetSecurityParam :: QueryHardFork xs SecurityParam
 
 deriving instance Show (QueryHardFork xs result)
 
 instance All SingleEraBlock xs => ShowQuery (QueryHardFork xs) where
   showResult query = case query of
-    GetInterpreter -> show
-    GetCurrentEra  -> show
-    GetLedgerCfg   -> const "TODO show `HardForkLedgerConfig xs`"
+    GetInterpreter   -> show
+    GetCurrentEra    -> show
+    GetLedgerCfg     -> const "TODO show `HardForkLedgerConfig xs`"
+    GetSecurityParam -> show
 
 instance SameDepIndex (QueryHardFork xs) where
   sameDepIndex GetInterpreter GetInterpreter =
@@ -333,6 +335,10 @@ instance SameDepIndex (QueryHardFork xs) where
   sameDepIndex GetLedgerCfg GetLedgerCfg =
       Just Refl
   sameDepIndex GetLedgerCfg _ =
+      Nothing
+  sameDepIndex GetSecurityParam GetSecurityParam =
+      Just Refl
+  sameDepIndex GetSecurityParam _ =
       Nothing
 
 interpretQueryHardFork ::
@@ -348,6 +354,7 @@ interpretQueryHardFork cfg query st =
       GetCurrentEra  ->
         eraIndexFromNS $ State.tip $ hardForkLedgerStatePerEra st
       GetLedgerCfg -> configLedger cfg
+      GetSecurityParam -> hardForkConsensusConfigK (configConsensus cfg)
 
 {-------------------------------------------------------------------------------
   Serialisation
@@ -378,9 +385,10 @@ encodeQueryHardForkResult ::
      )
   => QueryHardFork xs result -> result -> Encoding
 encodeQueryHardForkResult = \case
-    GetInterpreter -> encode
-    GetCurrentEra  -> encode
-    GetLedgerCfg   -> encode
+    GetInterpreter   -> encode
+    GetCurrentEra    -> encode
+    GetLedgerCfg     -> encode
+    GetSecurityParam -> encode
 
 decodeQueryHardForkResult ::
      ( Serialise (LedgerConfig (HardForkBlock xs))
@@ -388,9 +396,10 @@ decodeQueryHardForkResult ::
      )
   => QueryHardFork xs result -> forall s. Decoder s result
 decodeQueryHardForkResult = \case
-    GetInterpreter -> decode
-    GetCurrentEra  -> decode
-    GetLedgerCfg   -> decode
+    GetInterpreter   -> decode
+    GetCurrentEra    -> decode
+    GetLedgerCfg     -> decode
+    GetSecurityParam -> decode
 
 {-------------------------------------------------------------------------------
   Auxiliary
