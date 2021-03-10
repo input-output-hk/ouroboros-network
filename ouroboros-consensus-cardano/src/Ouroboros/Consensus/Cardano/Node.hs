@@ -571,7 +571,7 @@ protocolInfoCardano protocolParamsByron@ProtocolParamsByron {
     -- Alonzo
 
     genesisAlonzo :: ShelleyGenesis (AlonzoEra c)
-    genesisAlonzo = SL.translateEra' () genesisAllegra
+    genesisAlonzo = SL.translateEra' () genesisMary
 
     blockConfigAlonzo :: BlockConfig (ShelleyBlock (AlonzoEra c))
     blockConfigAlonzo =
