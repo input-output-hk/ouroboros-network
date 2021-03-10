@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE DerivingStrategies         #-}
 {-# LANGUAGE DisambiguateRecordFields   #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -34,7 +35,8 @@ import           Data.Set (Set)
 import           Data.Type.Equality (apply)
 import           Data.Typeable (Typeable)
 
-import           Cardano.Binary (FromCBOR (..), ToCBOR (..))
+import           Cardano.Binary (Annotator (..), FromCBOR (..),
+                     FullByteString (Full), ToCBOR (..))
 
 import           Ouroboros.Network.Block (Serialised (..), decodePoint,
                      encodePoint, mkSerialised)
@@ -49,6 +51,7 @@ import           Ouroboros.Consensus.Util (ShowProxy (..))
 import qualified Cardano.Ledger.Core as LC
 import qualified Shelley.Spec.Ledger.API as SL
 import qualified Shelley.Spec.Ledger.LedgerState as SL (RewardAccounts)
+import           Shelley.Spec.Ledger.PParams (unsafeForHashingPPDeltaDecoder)
 import qualified Shelley.Spec.Ledger.RewardProvenance as SL (RewardProvenance)
 
 import           Ouroboros.Consensus.Shelley.Eras (EraCrypto)
@@ -443,6 +446,8 @@ encodeShelleyResult query = case query of
     DebugChainDepState                         -> toCBOR
     GetRewardProvenance                        -> toCBOR
 
+-- TODO ledger team to replace unsafeForHashingPPDeltaDecoder
+-- and (forgetAnnotator fromCBOR) with fromCBOR.
 decodeShelleyResult ::
      ShelleyBasedEra era
   => Query (ShelleyBlock era) result
@@ -452,14 +457,18 @@ decodeShelleyResult query = case query of
     GetEpochNo                                 -> decode
     GetNonMyopicMemberRewards {}               -> decode
     GetCurrentPParams                          -> fromCBOR
-    GetProposedPParamsUpdates                  -> fromCBOR
+    GetProposedPParamsUpdates                  -> unsafeForHashingPPDeltaDecoder
     GetStakeDistribution                       -> fromCBOR
     GetFilteredUTxO {}                         -> fromCBOR
     GetUTxO                                    -> fromCBOR
-    DebugEpochState                            -> fromCBOR
+    DebugEpochState                            -> forgetAnnotator fromCBOR
     GetCBOR {}                                 -> decode
     GetFilteredDelegationsAndRewardAccounts {} -> fromCBOR
     GetGenesisConfig                           -> fromCBOR
-    DebugNewEpochState                         -> fromCBOR
+    DebugNewEpochState                         -> forgetAnnotator fromCBOR
     DebugChainDepState                         -> fromCBOR
     GetRewardProvenance                        -> fromCBOR
+    where
+       forgetAnnotator ::
+         forall a r. (forall t. Decoder t (Annotator a)) -> Decoder r a
+       forgetAnnotator d = (\x -> runAnnotator x (Full mempty)) <$> d
